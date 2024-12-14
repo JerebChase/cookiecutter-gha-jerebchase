@@ -15,6 +15,7 @@ port_user_inputs="$INPUT_PORTUSERINPUTS"
 monorepo_url="$INPUT_MONOREPOURL"
 scaffold_directory="$INPUT_SCAFFOLDDIRECTORY"
 create_port_entity="$INPUT_CREATEPORTENTITY"
+public_repo="$INPUT_PUBLICREPO"
 branch_name="port_$port_run_id"
 git_url="$INPUT_GITHUBURL"
 
@@ -53,13 +54,13 @@ create_repository() {
   if [ $userType == "User" ]; then
     curl -X POST -i -H "Authorization: token $github_token" -H "X-GitHub-Api-Version: 2022-11-28" \
        -d "{ \
-          \"name\": \"$repository_name\", \"private\": true
+          \"name\": \"$repository_name\", \"private\": $public_repo
         }" \
       $git_url/user/repos
   elif [ $userType == "Organization" ]; then
     curl -i -H "Authorization: token $github_token" \
        -d "{ \
-          \"name\": \"$repository_name\", \"private\": true
+          \"name\": \"$repository_name\", \"private\": $public_repo
         }" \
       $git_url/orgs/$org_name/repos
   else
