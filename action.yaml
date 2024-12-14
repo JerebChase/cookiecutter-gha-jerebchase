@@ -51,7 +51,7 @@ inputs:
     required: false
     default: "true"
   privateRepo:
-    description: 'Whether or not the created repository is private'
+    description: 'Whether or not the created repository should be private'
     required: false
     default: "false"
 runs:
