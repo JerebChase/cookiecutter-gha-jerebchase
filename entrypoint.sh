@@ -170,7 +170,7 @@ create_branches_and_environments() {
 
   latest_sha=$(curl -H "Authorization: token $github_token" \
                     -H "Content-Type: application/json" \
-                    "$git_url/repos/$owner/$repo/git/refs/heads/main" | jq -r '.object.sha')
+                    "$git_url/repos/$org_name/$repository_name/git/refs/heads/main" | jq -r '.object.sha')
 
   curl -X POST \
       -H "Authorization: token $github_token" \
@@ -178,31 +178,31 @@ create_branches_and_environments() {
       -d "{ \
           \"ref\": \"refs/heads/dev\", \"sha\": $latest_sha
         }" \
-      "$git_url/repos/$owner/$repo/git/refs"
+      "$git_url/repos/$org_name/$repository_name/git/refs"
 
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
       -d '{"wait_timer":0,"prevent_self_review":false,"reviewers":null,"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}' \
-      "$git_url/repos/$owner/$repo/environments/Prod"
+      "$git_url/repos/$org_name/$repository_name/environments/Prod"
 
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
       -d '{"wait_timer":0,"prevent_self_review":false,"reviewers":null,"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}' \
-      "$git_url/repos/$owner/$repo/environments/Dev"
+      "$git_url/repos/$org_name/$repository_name/environments/Dev"
 
   curl -X POST \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
       -d '{"name":"main"}' \
-      "$git_url/repos/$owner/$repo/environments/Prod/deployment-branch-policies"
+      "$git_url/repos/$org_name/$repository_name/environments/Prod/deployment-branch-policies"
 
   curl -X POST \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
       -d '{"name":"dev"}' \
-      "$git_url/repos/$owner/$repo/environments/Dev/deployment-branch-policies"
+      "$git_url/repos/$org_name/$repository_name/environments/Dev/deployment-branch-policies"
 }
 
 main() {
