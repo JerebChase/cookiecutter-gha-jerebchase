@@ -151,6 +151,8 @@ push_to_repository() {
       git branch -M main
       git remote add origin https://oauth2:$github_token@github.com/$org_name/$repository_name.git
       git push -u origin main
+      git checkout -b dev
+      git push -u origin dev
   fi
 }
 
@@ -167,19 +169,6 @@ report_to_port() {
 }
 
 create_branches_and_environments() {
-
-  latest_sha=$(curl -H "Authorization: token $github_token" \
-                    -H "Content-Type: application/json" \
-                    "$git_url/repos/$org_name/$repository_name/git/refs/heads/main" | jq -r '.object.sha')
-
-  curl -X POST \
-      -H "Authorization: token $github_token" \
-      -H "Content-Type: application/json" \
-      -d "{ \
-          \"ref\": \"refs/heads/dev\", \"sha\": \"$latest_sha\"
-        }" \
-      "$git_url/repos/$org_name/$repository_name/git/refs"
-
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
