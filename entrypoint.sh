@@ -176,7 +176,7 @@ create_branches_and_environments() {
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
       -d "{ \
-          \"ref\": \"refs/heads/dev\", \"sha\": $latest_sha
+          \"ref\": \"refs/heads/dev\", \"sha\": \"$latest_sha\"
         }" \
       "$git_url/repos/$org_name/$repository_name/git/refs"
 
