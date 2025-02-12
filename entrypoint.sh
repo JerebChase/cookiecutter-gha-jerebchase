@@ -166,6 +166,45 @@ report_to_port() {
     }"
 }
 
+create_branches_and_environments() {
+
+  latest_sha=$(curl -H "Authorization: token $github_token" \
+                    -H "Content-Type: application/json" \
+                    "$git_url/repos/$owner/$repo/git/refs/heads/main" | jq -r '.object.sha')
+
+  curl -X POST \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d "{ \
+          \"ref\": \"refs/heads/dev\", \"sha\": $latest_sha
+        }" \
+      "$git_url/repos/$owner/$repo/git/refs"
+
+  curl -X PUT \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d '{"wait_timer":0,"prevent_self_review":false,"reviewers":null,"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}' \
+      "$git_url/repos/$owner/$repo/environments/Prod"
+
+  curl -X PUT \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d '{"wait_timer":0,"prevent_self_review":false,"reviewers":null,"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}' \
+      "$git_url/repos/$owner/$repo/environments/Dev"
+
+  curl -X POST \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"main"}' \
+      "$git_url/repos/$owner/$repo/environments/Prod/deployment-branch-policies"
+
+  curl -X POST \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"dev"}' \
+      "$git_url/repos/$owner/$repo/environments/Dev/deployment-branch-policies"
+}
+
 main() {
   access_token=$(get_access_token)
 
@@ -184,6 +223,9 @@ main() {
   apply_cookiecutter_template
   send_log "Pushing the template into the repository ⬆️"
   push_to_repository
+
+  send_log "Creating branches and environments 🔀"
+  create_branches_and_environments
 
   url="https://github.com/$org_name/$repository_name"
 
