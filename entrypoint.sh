@@ -72,8 +72,8 @@ enable_repository_actions() {
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
-      -d '{"enabled": true}'
-      "$git_url/repos/$org_name/$repository_name/actions/permissions"
+      -d '{"enabled": true}' \
+      $git_url/repos/$org_name/$repository_name/actions/permissions
 }
 
 clone_monorepo() {
