@@ -68,6 +68,14 @@ create_repository() {
   fi
 }
 
+enable_repository_actions() {
+  curl -X PUT \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d '{"enabled": true}'
+      "$git_url/repos/$org_name/$repository_name/actions/permissions"
+}
+
 clone_monorepo() {
   git clone $monorepo_url monorepo
   cd monorepo
@@ -194,6 +202,23 @@ create_branches_and_environments() {
       "$git_url/repos/$org_name/$repository_name/environments/Dev/deployment-branch-policies"
 }
 
+create_env_variables_and_secrets() {
+  curl -X POST \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"ENVIRONMENT","value":"prod"}' \
+      "$git_url/repos/$org_name/$repository_name/environments/Prod/variables"
+
+  curl -X POST \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"ENVIRONMENT","value":"dev"}' \
+      "$git_url/repos/$org_name/$repository_name/environments/Dev/variables"
+
+  echo -n "my_secret_value" | gh secret set API_IMAGE --env Dev --repo $org_name/$repository_name
+  echo -n "my_secret_value" | gh secret set API_IMAGE --env Prod --repo $org_name/$repository_name
+}
+
 main() {
   access_token=$(get_access_token)
 
@@ -208,6 +233,9 @@ main() {
     send_log "Cloned monorepo and created branch $branch_name 🚀"
   fi
 
+  send_log "Enabling repository actions 🔨"
+  enable_repository_actions
+
   send_log "Starting templating with cookiecutter 🍪"
   apply_cookiecutter_template
   send_log "Pushing the template into the repository ⬆️"
@@ -215,6 +243,9 @@ main() {
 
   send_log "Creating branches and environments 🔀"
   create_branches_and_environments
+
+  send_log "Creating environment variables and secrets 🤫"
+  create_env_variables_and_secrets
 
   url="https://github.com/$org_name/$repository_name"
 
