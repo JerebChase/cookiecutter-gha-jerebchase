@@ -9,18 +9,16 @@ RUN apk update && \
     bash \
     py3-pip \
     nodejs \
-    npm && \
+    npm \
+    libsodium && \
     pip install --no-cache-dir cookiecutter six
 
 WORKDIR /util
-RUN npm install libsodium-wrappers
+COPY util /util
+RUN npm install
 
 WORKDIR /
 COPY *.sh /
 RUN chmod +x /*.sh
-
-COPY util /util
-
-WORKDIR /
 
 ENTRYPOINT ["/entrypoint.sh"]
