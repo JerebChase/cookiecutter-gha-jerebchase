@@ -12,6 +12,8 @@ RUN apk update && \
     npm && \
     pip install --no-cache-dir cookiecutter six
 
+RUN npm install -g libsodium-wrappers
+
 COPY *.sh /
 RUN chmod +x /*.sh
 
