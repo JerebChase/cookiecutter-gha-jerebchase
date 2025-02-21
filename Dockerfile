@@ -7,7 +7,7 @@ RUN apk update && \
     git \
     openssh-client \
     bash \
-    py3-pip \
+    py3-pip && \
     pip install --no-cache-dir cookiecutter six
 
 WORKDIR /util
