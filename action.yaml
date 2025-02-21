@@ -54,6 +54,12 @@ inputs:
     description: 'Whether or not the created repository should be private'
     required: false
     default: "false"
+  awsAccount:
+    description: "The AWS Account of the ECR repository to push the service image to"
+    required: true
+  roleArn:
+    description: "The role for the Github actions to authenticate to AWS with"
+    required: true
 runs:
   using: docker
   image: Dockerfile

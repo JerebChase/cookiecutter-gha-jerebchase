@@ -18,6 +18,8 @@ create_port_entity="$INPUT_CREATEPORTENTITY"
 private_repo="$INPUT_PRIVATEREPO"
 branch_name="port_$port_run_id"
 git_url="$INPUT_GITHUBURL"
+aws_account="$INPUT_AWSACCOUNT"
+role_arn="$INPUT_ROLEARN"
 
 get_access_token() {
   curl -s --location --request POST 'https://api.getport.io/v1/auth/access_token' --header 'Content-Type: application/json' --data-raw "{
@@ -215,8 +217,24 @@ create_env_variables_and_secrets() {
       -d '{"name":"ENVIRONMENT","value":"dev"}' \
       "$git_url/repos/$org_name/$repository_name/environments/Dev/variables"
 
-  echo -n "my_secret_value" | gh secret set API_IMAGE --env Dev --repo $org_name/$repository_name
-  echo -n "my_secret_value" | gh secret set API_IMAGE --env Prod --repo $org_name/$repository_name
+  repo_key=$(curl -H "Authorization: token $github_token" \
+                  -H "Content-Type: application/json" \
+                  "$git_url/repos/$org_name/$repository_name/actions/secrets/public-key")
+
+  account_secret=$(node util/encrypt-secret.js $aws_account $repo_key.key)
+  role_secret=$(node util/encrypt-secret.js $role_arn $repo_key.key)
+
+  curl -X PUT \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d "{\"encrypted_value\":\"$account_secret\",\"key_id\":\"$repokey.key_id\"}" \
+      "$git_url/repos/$org_name/$repository_name/actions/secrets/ACCOUNT_ID"
+
+  curl -X PUT \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d "{\"encrypted_value\":\"$role_secret\",\"key_id\":\"$repokey.key_id\"}" \
+      "$git_url/repos/$org_name/$repository_name/actions/secrets/AWS_ACCESS_ROLE"
 }
 
 main() {

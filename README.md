@@ -26,6 +26,8 @@ In addition, as cookiecutter is an Open Source project you can make your own pro
 | githubURL             | GitHub url for self hosted version                                                                                            | Yes      |https://api.github.com|
 | createPortEntity      | Whether should create port entity with the action or not. You can set this to `false` if you'd like to create the entry yourself with `port-labs/port-github-action`  | No  | true  |
 | privateRepo           | Whether or not the created repository should be private                                                                       | No        | false       |
+| awsAccount            | The AWS Account of the ECR repository to push the service image to                                                            | Yes       |             |
+| roleArn               | The role for the Github actions to authenticate to AWS with                                                                   | Yes       |             |
 
 ## Quickstart - Scaffold Golang Template
 
@@ -115,21 +117,26 @@ on:
           required: true
           description: "Port's payload, including details for who triggered the action and general context (blueprint, run id, etc...)"
           type: string
-jobs: 
+  jobs: 
     scaffold:
+      env:
+        ORG_NAME: INSERT_ORG_NAME
       runs-on: ubuntu-latest
       steps:
-        - uses: port-labs/cookiecutter-gha@v1.1
+        - uses: JerebChase/cookiecutter-gha-jerebchase@v1.0.7
           with:
             portClientId: ${{ secrets.PORT_CLIENT_ID }}
             portClientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
-            token: ${{ secrets.ORG_TOKEN }}
-            portRunId: ${{ fromJson(inputs.port_payload).context.runId }}
-            repositoryName: ${{ fromJson(inputs.port_payload).payload.properties.name }}
-            portUserInputs: ${{ toJson(fromJson(inputs.port_payload).payload.properties) }} 
-            cookiecutterTemplate: https://github.com/lacion/cookiecutter-golang
-            blueprintIdentifier: 'microservice'
-            organizationName: INSERT_ORG_NAME
+            token: ${{ secrets.ORG_ADMIN_TOKEN }}
+            portRunId: ${{ fromJson(inputs.port_context).runId }}
+            repositoryName: ${{ inputs.repository_name }}
+            portUserInputs: '{"cookiecutter_name": "${{ inputs.service_name }}", "cookiecutter_repo": "${{ inputs.repository_name }}", "cookiecutter_description": "${{ inputs.description }}" }'
+            cookiecutterTemplate: https://github.com/JerebChase/cookiecutter-spring-boot
+            blueprintIdentifier: "service"
+            organizationName: ${{ env.ORG_NAME }}
+            privateRepo: ${{ inputs.private_repo }}
+            awsAccount: ${{ inputs.aws_account }}
+            roleArn: ${{ inputs.role_arn }}
 ```
 6. Trigger the action from Port UI.
 ![gif](https://user-images.githubusercontent.com/51213812/230777057-081adf0c-f792-447e-bdec-35c99d73ba02.gif)
