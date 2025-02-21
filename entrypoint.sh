@@ -221,8 +221,8 @@ create_env_variables_and_secrets() {
                           -H "Content-Type: application/json" \
                           "$git_url/repos/$org_name/$repository_name/actions/secrets/public-key")
 
-  $repo_key=$(echo "$repo_key_response" | jq -r '.key')
-  $repo_key_id=$(echo "$repo_key_response" | jq -r '.key_id')
+  repo_key=$(echo "$repo_key_response" | jq -r '.key')
+  repo_key_id=$(echo "$repo_key_response" | jq -r '.key_id')
 
   account_secret=$(python /util/encrypt-secret.py $repo_key $aws_account)
   role_secret=$(python /util/encrypt-secret.py $repo_key $role_arn)
