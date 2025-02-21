@@ -227,9 +227,6 @@ create_env_variables_and_secrets() {
   account_secret=$(python /util/encrypt-secret.py $repo_key $aws_account)
   role_secret=$(python /util/encrypt-secret.py $repo_key $role_arn)
 
-  send_log $account_secret
-  send_log $role_secret
-
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
