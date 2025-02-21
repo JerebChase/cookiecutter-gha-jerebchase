@@ -8,14 +8,10 @@ RUN apk update && \
     openssh-client \
     bash \
     py3-pip \
-    nodejs \
-    npm \
-    libsodium && \
     pip install --no-cache-dir cookiecutter six
 
 WORKDIR /util
 COPY util /util
-RUN npm install libsodium-wrappers
 
 WORKDIR /
 COPY *.sh /

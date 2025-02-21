@@ -221,8 +221,8 @@ create_env_variables_and_secrets() {
                   -H "Content-Type: application/json" \
                   "$git_url/repos/$org_name/$repository_name/actions/secrets/public-key")
 
-  account_secret=$(node /util/encrypt-secret.js $aws_account $repo_key.key)
-  role_secret=$(node /util/encrypt-secret.js $role_arn $repo_key.key)
+  account_secret=$(python /util/encrypt-secret.py $repo_key.key $aws_account)
+  role_secret=$(python /util/encrypt-secret.py $repo_key.key $role_arn)
 
   curl -X PUT \
       -H "Authorization: token $github_token" \
