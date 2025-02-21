@@ -217,23 +217,26 @@ create_env_variables_and_secrets() {
       -d '{"name":"ENVIRONMENT","value":"dev"}' \
       "$git_url/repos/$org_name/$repository_name/environments/Dev/variables"
 
-  repo_key=$(curl -H "Authorization: token $github_token" \
-                  -H "Content-Type: application/json" \
-                  "$git_url/repos/$org_name/$repository_name/actions/secrets/public-key")
+  repo_key_response=$(curl -H "Authorization: token $github_token" \
+                          -H "Content-Type: application/json" \
+                          "$git_url/repos/$org_name/$repository_name/actions/secrets/public-key")
 
-  account_secret=$(python /util/encrypt-secret.py $repo_key.key $aws_account)
-  role_secret=$(python /util/encrypt-secret.py $repo_key.key $role_arn)
+  $repo_key=$(echo "$repo_key_response" | jq -r '.key')
+  $repo_key_id=$(echo "$repo_key_response" | jq -r '.key_id')
+
+  account_secret=$(python /util/encrypt-secret.py $repo_key $aws_account)
+  role_secret=$(python /util/encrypt-secret.py $repo_key $role_arn)
 
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
-      -d "{\"encrypted_value\":\"$account_secret\",\"key_id\":\"$repokey.key_id\"}" \
+      -d "{\"encrypted_value\":\"$account_secret\",\"key_id\":\"$repo_key_id\"}" \
       "$git_url/repos/$org_name/$repository_name/actions/secrets/ACCOUNT_ID"
 
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
-      -d "{\"encrypted_value\":\"$role_secret\",\"key_id\":\"$repokey.key_id\"}" \
+      -d "{\"encrypted_value\":\"$role_secret\",\"key_id\":\"$repo_key_id\"}" \
       "$git_url/repos/$org_name/$repository_name/actions/secrets/AWS_ACCESS_ROLE"
 }
 
