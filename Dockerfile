@@ -15,7 +15,7 @@ RUN apk update && \
 
 WORKDIR /util
 COPY util /util
-RUN npm install
+RUN npm install libsodium-wrappers
 
 WORKDIR /
 COPY *.sh /
