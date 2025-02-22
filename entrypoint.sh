@@ -68,9 +68,7 @@ create_repository() {
   else
     echo "Invalid user type"
   fi
-}
 
-enable_repository_actions() {
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
@@ -253,9 +251,6 @@ main() {
     cd_to_scaffold_directory
     send_log "Cloned monorepo and created branch $branch_name 🚀"
   fi
-
-  send_log "Enabling repository actions 🔨"
-  enable_repository_actions
 
   send_log "Creating repository secrets 🤫"
   create_repo_secrets
