@@ -78,6 +78,30 @@ enable_repository_actions() {
       $git_url/repos/$org_name/$repository_name/actions/permissions
 }
 
+create_repo_secrets() {
+  repo_key_response=$(curl -H "Authorization: token $github_token" \
+                          -H "Content-Type: application/json" \
+                          "$git_url/repos/$org_name/$repository_name/actions/secrets/public-key")
+
+  repo_key=$(echo "$repo_key_response" | jq -r '.key')
+  repo_key_id=$(echo "$repo_key_response" | jq -r '.key_id')
+
+  account_secret=$(python /util/encrypt-secret.py $repo_key $aws_account)
+  role_secret=$(python /util/encrypt-secret.py $repo_key $role_arn)
+
+  curl -X PUT \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d "{\"encrypted_value\":\"$account_secret\",\"key_id\":\"$repo_key_id\"}" \
+      "$git_url/repos/$org_name/$repository_name/actions/secrets/ACCOUNT_ID"
+
+  curl -X PUT \
+      -H "Authorization: token $github_token" \
+      -H "Content-Type: application/json" \
+      -d "{\"encrypted_value\":\"$role_secret\",\"key_id\":\"$repo_key_id\"}" \
+      "$git_url/repos/$org_name/$repository_name/actions/secrets/AWS_ACCESS_ROLE"
+}
+
 clone_monorepo() {
   git clone $monorepo_url monorepo
   cd monorepo
@@ -178,7 +202,7 @@ report_to_port() {
     }"
 }
 
-create_branches_and_environments() {
+create_environments() {
   curl -X PUT \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
@@ -202,9 +226,7 @@ create_branches_and_environments() {
       -H "Content-Type: application/json" \
       -d '{"name":"dev"}' \
       "$git_url/repos/$org_name/$repository_name/environments/Dev/deployment-branch-policies"
-}
 
-create_env_variables_and_secrets() {
   curl -X POST \
       -H "Authorization: token $github_token" \
       -H "Content-Type: application/json" \
@@ -216,28 +238,6 @@ create_env_variables_and_secrets() {
       -H "Content-Type: application/json" \
       -d '{"name":"ENVIRONMENT","value":"dev"}' \
       "$git_url/repos/$org_name/$repository_name/environments/Dev/variables"
-
-  repo_key_response=$(curl -H "Authorization: token $github_token" \
-                          -H "Content-Type: application/json" \
-                          "$git_url/repos/$org_name/$repository_name/actions/secrets/public-key")
-
-  repo_key=$(echo "$repo_key_response" | jq -r '.key')
-  repo_key_id=$(echo "$repo_key_response" | jq -r '.key_id')
-
-  account_secret=$(python /util/encrypt-secret.py $repo_key $aws_account)
-  role_secret=$(python /util/encrypt-secret.py $repo_key $role_arn)
-
-  curl -X PUT \
-      -H "Authorization: token $github_token" \
-      -H "Content-Type: application/json" \
-      -d "{\"encrypted_value\":\"$account_secret\",\"key_id\":\"$repo_key_id\"}" \
-      "$git_url/repos/$org_name/$repository_name/actions/secrets/ACCOUNT_ID"
-
-  curl -X PUT \
-      -H "Authorization: token $github_token" \
-      -H "Content-Type: application/json" \
-      -d "{\"encrypted_value\":\"$role_secret\",\"key_id\":\"$repo_key_id\"}" \
-      "$git_url/repos/$org_name/$repository_name/actions/secrets/AWS_ACCESS_ROLE"
 }
 
 main() {
@@ -257,16 +257,16 @@ main() {
   send_log "Enabling repository actions 🔨"
   enable_repository_actions
 
+  send_log "Creating repository secrets 🤫"
+  create_repo_secrets
+
   send_log "Starting templating with cookiecutter 🍪"
   apply_cookiecutter_template
   send_log "Pushing the template into the repository ⬆️"
   push_to_repository
 
-  send_log "Creating branches and environments 🔀"
-  create_branches_and_environments
-
-  send_log "Creating environment variables and secrets 🤫"
-  create_env_variables_and_secrets
+  send_log "Creating environments and environment variables 🔀"
+  create_environments
 
   url="https://github.com/$org_name/$repository_name"
 
